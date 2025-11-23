@@ -80,3 +80,9 @@ variable "enable_dkim" {
   default     = false
 }
 
+variable "enable_sns_notifications" {
+  description = "Enable SNS notifications for received emails (set to false initially if receipt rule creation fails, then enable after policies propagate)"
+  type        = bool
+  default     = true
+}
+
