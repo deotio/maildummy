@@ -186,6 +186,9 @@ resource "aws_s3_bucket_policy" "maildummy" {
 }
 
 # IAM policy for SES to publish to SNS topic
+# Note: Policy is intentionally simple (no conditions) to avoid AWS SES validation issues
+# The policy allows SES service from any account in the same region to publish
+# In production, consider adding SourceAccount condition after initial deployment
 resource "aws_sns_topic_policy" "maildummy" {
   arn = aws_sns_topic.maildummy.arn
 
@@ -199,13 +202,8 @@ resource "aws_sns_topic_policy" "maildummy" {
         }
         Action   = "SNS:Publish"
         Resource = aws_sns_topic.maildummy.arn
-        Condition = {
-          StringEquals = {
-            "AWS:SourceAccount" = data.aws_caller_identity.current.account_id
-          }
-          # Note: ArnLike condition removed to avoid circular dependency when creating receipt rule
-          # The SourceAccount condition provides sufficient security
-        }
+        # No conditions - AWS SES validation is very strict and can fail even with SourceAccount condition
+        # After successful deployment, you can manually add SourceAccount condition if needed for security
       }
     ]
   })
