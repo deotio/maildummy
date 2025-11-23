@@ -17,10 +17,29 @@ The maildummy setup consists of:
 
 - **SES Domain Identity**: Verifies the `maildummy.{domain}` domain for receiving emails
 - **S3 Bucket**: Stores incoming emails in raw MIME format
-- **SNS Topic**: Publishes notifications when emails are received
+- **SNS Topic**: Publishes notifications when emails are received (optional, see Known Issues)
 - **SES Receipt Rule Set**: Routes emails to the maildummy domain to S3
 - **MX Record**: Points the maildummy domain to AWS SES inbound SMTP endpoint
 - **DKIM Records**: Enable email authentication for the domain (optional)
+
+## Known Issues
+
+### SNS Topic Notifications
+
+**Issue**: AWS SES receipt rules with SNS topic actions may fail with `InvalidSnsTopic: Could not publish to SNS topic` error, even with correctly configured SNS topic policies.
+
+**Root Cause**: AWS SES validates SNS topic permissions synchronously when creating/updating receipt rules. This validation can fail due to:
+- Policy propagation delays
+- AWS internal validation timing
+- Stricter validation requirements than documented
+
+**Workaround**: 
+1. Set `enable_sns_notifications = false` initially
+2. Create the receipt rule successfully
+3. Optionally try enabling SNS notifications later (may still fail)
+4. For email testing, S3 storage is sufficient - SNS notifications are optional
+
+**Status**: This appears to be an AWS SES limitation rather than a module bug. The module provides `enable_sns_notifications` variable to work around this issue.
 
 ## Terraform Module
 
@@ -95,6 +114,7 @@ module "ses_maildummy" {
 | `email_retention_days`  | Number of days to retain emails in S3                                                     | `number`      | No          | `1`            |
 | `tags`                  | Tags to apply to resources                                                                | `map(string)` | No          | `{}`           |
 | `enable_dkim`           | Enable DKIM records creation                                                              | `bool`        | No          | `false`        |
+| `enable_sns_notifications` | Enable SNS notifications for received emails (see Known Issues)                      | `bool`        | No          | `true`         |
 
 ### Outputs
 
