@@ -191,7 +191,8 @@ resource "aws_sns_topic_policy" "maildummy" {
             "AWS:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
-            "AWS:SourceArn" = "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:receipt-rule-set/${var.receipt_rule_set_name}:receipt-rule/${var.receipt_rule_name}"
+            # Use wildcard to allow any receipt rule in the rule set (avoids circular dependency)
+            "AWS:SourceArn" = "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:receipt-rule-set/${var.receipt_rule_set_name}:receipt-rule/*"
           }
         }
       }
