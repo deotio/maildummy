@@ -65,6 +65,22 @@ resource "aws_s3_bucket" "maildummy" {
   }
 }
 
+# Allow SES to set ACLs on delivered objects.
+resource "aws_s3_bucket_ownership_controls" "maildummy" {
+  bucket = aws_s3_bucket.maildummy.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "maildummy" {
+  bucket = aws_s3_bucket.maildummy.id
+  acl    = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.maildummy]
+}
+
 # Enable server-side encryption for S3 bucket
 resource "aws_s3_bucket_server_side_encryption_configuration" "maildummy" {
   bucket = aws_s3_bucket.maildummy.id
@@ -121,7 +137,7 @@ resource "aws_sns_topic" "maildummy" {
 resource "aws_ses_receipt_rule" "maildummy" {
   name          = var.receipt_rule_name
   rule_set_name = var.receipt_rule_set_name
-  recipients    = [var.maildummy_domain]
+  # recipients omitted -> catch-all for domain handled by MX
   enabled       = true
   scan_enabled  = false
 
@@ -163,14 +179,18 @@ resource "aws_s3_bucket_policy" "maildummy" {
         Principal = {
           Service = "ses.amazonaws.com"
         }
-        Action   = "s3:PutObject"
+        Action   = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ]
         Resource = "${aws_s3_bucket.maildummy.arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceAccount" = data.aws_caller_identity.current.account_id
           }
-          # Note: ArnLike condition removed to avoid circular dependency when creating receipt rule
-          # The SourceAccount condition provides sufficient security
+          ArnLike = {
+            "AWS:SourceArn" = "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:receipt-rule-set/${var.receipt_rule_set_name}:receipt-rule/${var.receipt_rule_name}"
+          }
         }
       }
     ]
@@ -281,6 +301,5 @@ data "aws_caller_identity" "current" {}
 
 # Build SES inbound endpoint dynamically from region
 locals {
-  ses_inbound_endpoint = "inbound-smtp.${var.aws_region}.amazonses.com"
+  ses_inbound_endpoint = "inbound-smtp.${var.aws_region}.amazonaws.com"
 }
-
