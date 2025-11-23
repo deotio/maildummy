@@ -137,7 +137,7 @@ resource "aws_sns_topic" "maildummy" {
 resource "aws_ses_receipt_rule" "maildummy" {
   name          = var.receipt_rule_name
   rule_set_name = var.receipt_rule_set_name
-  # recipients omitted -> catch-all for domain handled by MX
+  recipients    = [var.maildummy_domain]
   enabled       = true
   scan_enabled  = false
 
