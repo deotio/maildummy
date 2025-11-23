@@ -1,0 +1,35 @@
+output "maildummy_domain" {
+  description = "Maildummy domain name"
+  value       = var.maildummy_domain
+}
+
+output "s3_bucket_name" {
+  description = "S3 bucket name for storing emails"
+  value       = aws_s3_bucket.maildummy.id
+}
+
+output "s3_bucket_arn" {
+  description = "S3 bucket ARN"
+  value       = aws_s3_bucket.maildummy.arn
+}
+
+output "sns_topic_arn" {
+  description = "SNS topic ARN for email notifications"
+  value       = aws_sns_topic.maildummy.arn
+}
+
+output "sns_topic_name" {
+  description = "SNS topic name"
+  value       = aws_sns_topic.maildummy.name
+}
+
+output "receipt_rule_set_name" {
+  description = "SES receipt rule set name"
+  value       = aws_ses_receipt_rule_set.maildummy.rule_set_name
+}
+
+output "ses_identity_arn" {
+  description = "SES domain identity ARN"
+  value       = aws_ses_domain_identity.maildummy.arn
+}
+

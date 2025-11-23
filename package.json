@@ -1,0 +1,24 @@
+{
+  "name": "maildummy",
+  "version": "1.0.0",
+  "description": "SES Email Testing Infrastructure - Reusable Terraform module and helper utilities",
+  "main": "scripts/get-magic-link-from-s3.js",
+  "scripts": {
+    "get-magic-link": "node scripts/get-magic-link-from-s3.js"
+  },
+  "keywords": [
+    "aws",
+    "ses",
+    "email",
+    "testing",
+    "terraform",
+    "e2e"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "mailparser": "^3.0.0"
+  }
+}
+
