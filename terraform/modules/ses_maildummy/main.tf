@@ -163,9 +163,8 @@ resource "aws_s3_bucket_policy" "maildummy" {
           StringEquals = {
             "AWS:SourceAccount" = data.aws_caller_identity.current.account_id
           }
-          ArnLike = {
-            "AWS:SourceArn" = "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.current.account_id}:receipt-rule-set/${var.receipt_rule_set_name}:receipt-rule/${var.receipt_rule_name}"
-          }
+          # Note: ArnLike condition removed to avoid circular dependency when creating receipt rule
+          # The SourceAccount condition provides sufficient security
         }
       }
     ]
