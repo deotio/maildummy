@@ -1,6 +1,6 @@
 {
   "name": "maildummy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SES Email Testing Infrastructure - Reusable Terraform module and helper utilities",
   "main": "scripts/get-magic-link-from-s3.js",
   "scripts": {
@@ -21,4 +21,3 @@
     "mailparser": "^3.0.0"
   }
 }
-
