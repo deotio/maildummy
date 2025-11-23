@@ -64,7 +64,7 @@ Once the repository is pushed, update `environments/dev/terraform/main.tf`:
 ```hcl
 module "ses_maildummy" {
   source = "git::https://github.com/your-org/maildummy.git//terraform/modules/ses_maildummy?ref=main"
-  
+
   # ... rest of configuration
 }
 ```
@@ -95,7 +95,7 @@ source = "git::https://github.com/your-org/maildummy.git//terraform/modules/ses_
 ✅ Works with Terraform Cloud  
 ✅ Version control and tagging  
 ✅ Easy to share across projects  
-✅ No additional tools required  
+✅ No additional tools required
 
 ## Troubleshooting
 
@@ -115,4 +115,3 @@ source = "git::git@github.com:your-org/maildummy.git//terraform/modules/ses_mail
 ```
 
 Or use Terraform's built-in credential helpers for HTTPS.
-

@@ -8,15 +8,33 @@ variable "maildummy_subdomain" {
   type        = string
 }
 
-variable "cloudflare_zone_id" {
-  description = "Cloudflare Zone ID for DNS record creation"
+variable "dns_provider" {
+  description = "DNS provider to use for DNS record creation. Must be either 'cloudflare' or 'route53'"
   type        = string
+  default     = "cloudflare"
+
+  validation {
+    condition     = contains(["cloudflare", "route53"], var.dns_provider)
+    error_message = "dns_provider must be either 'cloudflare' or 'route53'"
+  }
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for DNS record creation (required when dns_provider = 'cloudflare')"
+  type        = string
+  default     = null
+}
+
+variable "route53_zone_id" {
+  description = "Route53 Hosted Zone ID for DNS record creation (required when dns_provider = 'route53')"
+  type        = string
+  default     = null
 }
 
 variable "aws_region" {
   description = "AWS region for SES resources"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-central-1"
 }
 
 variable "s3_bucket_name" {
@@ -39,15 +57,15 @@ variable "receipt_rule_name" {
   type        = string
 }
 
-variable "ses_inbound_endpoint" {
-  description = "SES inbound SMTP endpoint (e.g., inbound-smtp.us-east-1.amazonaws.com)"
-  type        = string
-}
-
 variable "email_retention_days" {
   description = "Number of days to retain emails in S3 before auto-deletion"
   type        = number
   default     = 1
+
+  validation {
+    condition     = var.email_retention_days > 0
+    error_message = "email_retention_days must be greater than 0"
+  }
 }
 
 variable "tags" {

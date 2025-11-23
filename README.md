@@ -26,19 +26,47 @@ The maildummy setup consists of:
 
 ### Usage
 
+#### Using Cloudflare DNS
+
 ```hcl
 module "ses_maildummy" {
   source = "path/to/maildummy/terraform/modules/ses_maildummy"
 
   maildummy_domain      = "maildummy.example.com"
   maildummy_subdomain   = "maildummy"
+  dns_provider          = "cloudflare"
   cloudflare_zone_id    = "your-cloudflare-zone-id"
-  aws_region            = "us-east-1"
+  aws_region            = "eu-central-1"
   s3_bucket_name        = "my-project-maildummy-123456789"
   sns_topic_name        = "my-project-maildummy-notifications"
   receipt_rule_set_name = "my-project-maildummy-rule-set"
   receipt_rule_name     = "my-project-maildummy-rule"
-  ses_inbound_endpoint  = "inbound-smtp.us-east-1.amazonaws.com"
+  email_retention_days  = 1
+  enable_dkim           = false
+
+  tags = {
+    Project     = "my-project"
+    Environment = "dev"
+    Purpose     = "E2E Testing"
+  }
+}
+```
+
+#### Using Route53 DNS
+
+```hcl
+module "ses_maildummy" {
+  source = "path/to/maildummy/terraform/modules/ses_maildummy"
+
+  maildummy_domain      = "maildummy.example.com"
+  maildummy_subdomain   = "maildummy"
+  dns_provider          = "route53"
+  route53_zone_id       = "Z1234567890ABC"
+  aws_region            = "eu-central-1"
+  s3_bucket_name        = "my-project-maildummy-123456789"
+  sns_topic_name        = "my-project-maildummy-notifications"
+  receipt_rule_set_name = "my-project-maildummy-rule-set"
+  receipt_rule_name     = "my-project-maildummy-rule"
   email_retention_days  = 1
   enable_dkim           = false
 
@@ -52,32 +80,33 @@ module "ses_maildummy" {
 
 ### Variables
 
-| Variable | Description | Type | Required | Default |
-|----------|-------------|------|----------|---------|
-| `maildummy_domain` | Full maildummy domain (e.g., maildummy.example.com) | `string` | Yes | - |
-| `maildummy_subdomain` | Maildummy subdomain without zone (e.g., maildummy) | `string` | Yes | - |
-| `cloudflare_zone_id` | Cloudflare Zone ID for DNS record creation | `string` | Yes | - |
-| `aws_region` | AWS region for SES resources | `string` | No | `us-east-1` |
-| `s3_bucket_name` | Name of the S3 bucket to store incoming emails | `string` | Yes | - |
-| `sns_topic_name` | Name of the SNS topic for email notifications | `string` | Yes | - |
-| `receipt_rule_set_name` | Name of the SES receipt rule set | `string` | Yes | - |
-| `receipt_rule_name` | Name of the SES receipt rule | `string` | Yes | - |
-| `ses_inbound_endpoint` | SES inbound SMTP endpoint | `string` | Yes | - |
-| `email_retention_days` | Number of days to retain emails in S3 | `number` | No | `1` |
-| `tags` | Tags to apply to resources | `map(string)` | No | `{}` |
-| `enable_dkim` | Enable DKIM records creation | `bool` | No | `false` |
+| Variable                | Description                                                                               | Type          | Required    | Default        |
+| ----------------------- | ----------------------------------------------------------------------------------------- | ------------- | ----------- | -------------- |
+| `maildummy_domain`      | Full maildummy domain (e.g., maildummy.example.com)                                       | `string`      | Yes         | -              |
+| `maildummy_subdomain`   | Maildummy subdomain without zone (e.g., maildummy)                                        | `string`      | Yes         | -              |
+| `dns_provider`          | DNS provider to use: `cloudflare` or `route53`                                            | `string`      | No          | `cloudflare`   |
+| `cloudflare_zone_id`    | Cloudflare Zone ID for DNS record creation (required when `dns_provider = "cloudflare"`)  | `string`      | Conditional | `null`         |
+| `route53_zone_id`       | Route53 Hosted Zone ID for DNS record creation (required when `dns_provider = "route53"`) | `string`      | Conditional | `null`         |
+| `aws_region`            | AWS region for SES resources                                                              | `string`      | No          | `eu-central-1` |
+| `s3_bucket_name`        | Name of the S3 bucket to store incoming emails                                            | `string`      | Yes         | -              |
+| `sns_topic_name`        | Name of the SNS topic for email notifications                                             | `string`      | Yes         | -              |
+| `receipt_rule_set_name` | Name of the SES receipt rule set                                                          | `string`      | Yes         | -              |
+| `receipt_rule_name`     | Name of the SES receipt rule                                                              | `string`      | Yes         | -              |
+| `email_retention_days`  | Number of days to retain emails in S3                                                     | `number`      | No          | `1`            |
+| `tags`                  | Tags to apply to resources                                                                | `map(string)` | No          | `{}`           |
+| `enable_dkim`           | Enable DKIM records creation                                                              | `bool`        | No          | `false`        |
 
 ### Outputs
 
-| Output | Description |
-|--------|-------------|
-| `maildummy_domain` | Maildummy domain name |
-| `s3_bucket_name` | S3 bucket name for storing emails |
-| `s3_bucket_arn` | S3 bucket ARN |
-| `sns_topic_arn` | SNS topic ARN for email notifications |
-| `sns_topic_name` | SNS topic name |
-| `receipt_rule_set_name` | SES receipt rule set name |
-| `ses_identity_arn` | SES domain identity ARN |
+| Output                  | Description                           |
+| ----------------------- | ------------------------------------- |
+| `maildummy_domain`      | Maildummy domain name                 |
+| `s3_bucket_name`        | S3 bucket name for storing emails     |
+| `s3_bucket_arn`         | S3 bucket ARN                         |
+| `sns_topic_arn`         | SNS topic ARN for email notifications |
+| `sns_topic_name`        | SNS topic name                        |
+| `receipt_rule_set_name` | SES receipt rule set name             |
+| `ses_identity_arn`      | SES domain identity ARN               |
 
 ## Helper Scripts
 
@@ -90,6 +119,7 @@ node scripts/get-magic-link-from-s3.js <bucket-name> <email-address> [--region <
 ```
 
 **Dependencies:**
+
 ```bash
 npm install @aws-sdk/client-s3 mailparser
 ```
@@ -103,6 +133,7 @@ python scripts/get-magic-link-from-s3.py <bucket-name> <email-address> [--region
 ```
 
 **Dependencies:**
+
 ```bash
 pip install boto3
 ```
@@ -139,12 +170,15 @@ import { getMagicLinkFromS3 } from './utils/maildummy-helper';
 // Wait a few seconds for email to be processed
 await new Promise((resolve) => setTimeout(resolve, 5000));
 
-const magicLink = await getMagicLinkFromS3({
-  bucketName: 'my-project-maildummy-123456789',
-  region: 'us-east-1',
-  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-}, testEmail);
+const magicLink = await getMagicLinkFromS3(
+  {
+    bucketName: 'my-project-maildummy-123456789',
+    region: 'us-east-1',
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+  testEmail
+);
 ```
 
 ### 4. Complete Authentication
@@ -198,16 +232,19 @@ terraform apply
 ### Emails Not Appearing in S3
 
 1. **Check DNS**: Verify the MX record exists for `maildummy.{domain}`
+
    ```bash
    dig MX maildummy.example.com
    ```
 
 2. **Check SES Identity**: Verify the domain is verified in SES
+
    ```bash
    aws ses get-identity-verification-attributes --identities maildummy.example.com
    ```
 
 3. **Check Receipt Rule Set**: Verify the rule set is active
+
    ```bash
    aws ses describe-active-receipt-rule-set
    ```
@@ -249,17 +286,20 @@ aws ses get-identity-verification-attributes --identities maildummy.example.com
 - **S3 Storage**: Minimal cost (emails are small and deleted after retention period)
 - **SES**: No cost for receiving emails (only sending costs)
 - **SNS**: Minimal cost for notifications
-- **DNS**: No additional cost for Cloudflare DNS records
+- **DNS**:
+  - Cloudflare: No additional cost for DNS records
+  - Route53: Standard Route53 hosted zone and record pricing applies
 
 ## Requirements
 
 - Terraform >= 1.0
 - AWS Provider >= 5.0
-- Cloudflare Provider = 5.12.0
+- Cloudflare Provider = 5.12.0 (only required when using Cloudflare DNS)
 - AWS account with SES access
-- Cloudflare account with DNS zone management
+- DNS provider account:
+  - Cloudflare account with DNS zone management (when using Cloudflare)
+  - AWS account with Route53 hosted zone (when using Route53)
 
 ## License
 
 This module is provided as-is for use in your projects.
-
