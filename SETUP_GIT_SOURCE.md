@@ -1,0 +1,118 @@
+# Setting Up Git Source for Maildummy Module
+
+This guide will help you set up the maildummy module to be referenced via git source in your Terraform configurations.
+
+## Step 1: Initialize Git Repository (if not already done)
+
+```bash
+cd /Users/rmyers/repos/dot/maildummy
+
+# Check if git is initialized
+git status
+
+# If not initialized, run:
+git init
+```
+
+## Step 2: Create Initial Commit
+
+```bash
+cd /Users/rmyers/repos/dot/maildummy
+
+# Add all files
+git add .
+
+# Create initial commit
+git commit -m "Initial commit: Maildummy infrastructure module"
+```
+
+## Step 3: Push to Git Remote
+
+### Option A: GitHub
+
+```bash
+# Create a new repository on GitHub (e.g., github.com/your-org/maildummy)
+# Then add the remote:
+git remote add origin https://github.com/your-org/maildummy.git
+git branch -M main
+git push -u origin main
+```
+
+### Option B: GitLab
+
+```bash
+# Create a new repository on GitLab
+# Then add the remote:
+git remote add origin https://gitlab.com/your-org/maildummy.git
+git branch -M main
+git push -u origin main
+```
+
+### Option C: Other Git Hosting
+
+```bash
+# Add your git remote URL
+git remote add origin <your-git-url>
+git branch -M main
+git push -u origin main
+```
+
+## Step 4: Update Terraform Configuration
+
+Once the repository is pushed, update `environments/dev/terraform/main.tf`:
+
+```hcl
+module "ses_maildummy" {
+  source = "git::https://github.com/your-org/maildummy.git//terraform/modules/ses_maildummy?ref=main"
+  
+  # ... rest of configuration
+}
+```
+
+Replace `your-org` and the URL with your actual repository details.
+
+## Step 5: Use Version Tags (Recommended)
+
+For production use, create version tags:
+
+```bash
+cd /Users/rmyers/repos/dot/maildummy
+
+# Create a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Then reference specific versions in Terraform:
+
+```hcl
+source = "git::https://github.com/your-org/maildummy.git//terraform/modules/ses_maildummy?ref=v1.0.0"
+```
+
+## Benefits
+
+✅ No fragile file paths  
+✅ Works with Terraform Cloud  
+✅ Version control and tagging  
+✅ Easy to share across projects  
+✅ No additional tools required  
+
+## Troubleshooting
+
+### Terraform can't find the module
+
+1. Verify the git URL is correct
+2. Ensure the repository is accessible (public or you have access)
+3. Check that the path `//terraform/modules/ses_maildummy` is correct
+4. Verify the branch/tag exists
+
+### Authentication issues
+
+If using a private repository, you may need to configure git credentials or use SSH:
+
+```hcl
+source = "git::git@github.com:your-org/maildummy.git//terraform/modules/ses_maildummy?ref=main"
+```
+
+Or use Terraform's built-in credential helpers for HTTPS.
+
