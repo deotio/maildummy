@@ -118,6 +118,8 @@ resource "aws_ses_receipt_rule_set" "maildummy" {
 }
 
 # SES Receipt Rule - stores emails in S3 and notifies SNS
+# Note: Using separate SNS action instead of topic_arn in s3_action to avoid
+# policy validation issues during initial creation
 resource "aws_ses_receipt_rule" "maildummy" {
   name          = var.receipt_rule_name
   rule_set_name = aws_ses_receipt_rule_set.maildummy.rule_set_name
@@ -125,11 +127,19 @@ resource "aws_ses_receipt_rule" "maildummy" {
   enabled       = true
   scan_enabled  = false
 
+  # S3 action - store emails in S3
   s3_action {
     bucket_name       = aws_s3_bucket.maildummy.id
     object_key_prefix = "raw/"
-    topic_arn         = aws_sns_topic.maildummy.arn
     position          = 1
+  }
+
+  # SNS action - notify when emails are received
+  # Using separate action instead of topic_arn in s3_action to avoid validation issues
+  sns_action {
+    topic_arn = aws_sns_topic.maildummy.arn
+    position  = 2
+    encoding  = "UTF-8"
   }
 
   depends_on = [
