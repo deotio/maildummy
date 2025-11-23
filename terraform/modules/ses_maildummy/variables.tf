@@ -48,12 +48,12 @@ variable "sns_topic_name" {
 }
 
 variable "receipt_rule_set_name" {
-  description = "Name of the SES receipt rule set"
+  description = "Name of an existing SES receipt rule set to append the rule to. Only one active receipt rule set is allowed per region, so this must reference an existing ruleset."
   type        = string
 }
 
 variable "receipt_rule_name" {
-  description = "Name of the SES receipt rule"
+  description = "Name of the SES receipt rule to create and append to the existing ruleset"
   type        = string
 }
 

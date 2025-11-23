@@ -24,8 +24,8 @@ output "sns_topic_name" {
 }
 
 output "receipt_rule_set_name" {
-  description = "SES receipt rule set name"
-  value       = aws_ses_receipt_rule_set.maildummy.rule_set_name
+  description = "SES receipt rule set name (the existing ruleset the rule was appended to)"
+  value       = var.receipt_rule_set_name
 }
 
 output "ses_identity_arn" {

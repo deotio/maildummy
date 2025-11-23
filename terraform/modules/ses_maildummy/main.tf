@@ -112,17 +112,15 @@ resource "aws_sns_topic" "maildummy" {
   tags = var.tags
 }
 
-# SES Receipt Rule Set
-resource "aws_ses_receipt_rule_set" "maildummy" {
-  rule_set_name = var.receipt_rule_set_name
-}
-
 # SES Receipt Rule - stores emails in S3 and notifies SNS
+# Note: This rule is appended to an existing receipt rule set (provided via receipt_rule_set_name variable).
+# Only one active receipt rule set is allowed per region, so the module does not create or activate rule sets.
+# The rule will be appended to the end of the existing ruleset automatically.
 # Note: Using separate SNS action instead of topic_arn in s3_action to avoid
 # policy validation issues during initial creation
 resource "aws_ses_receipt_rule" "maildummy" {
   name          = var.receipt_rule_name
-  rule_set_name = aws_ses_receipt_rule_set.maildummy.rule_set_name
+  rule_set_name = var.receipt_rule_set_name
   recipients    = [var.maildummy_domain]
   enabled       = true
   scan_enabled  = false
@@ -147,15 +145,9 @@ resource "aws_ses_receipt_rule" "maildummy" {
   }
 
   depends_on = [
-    aws_ses_receipt_rule_set.maildummy,
     aws_s3_bucket_policy.maildummy,
     aws_sns_topic_policy.maildummy
   ]
-}
-
-# Activate the receipt rule set
-resource "aws_ses_active_receipt_rule_set" "maildummy" {
-  rule_set_name = aws_ses_receipt_rule_set.maildummy.rule_set_name
 }
 
 # IAM policy for SES to write to S3 bucket
